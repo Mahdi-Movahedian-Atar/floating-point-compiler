@@ -1,15 +1,18 @@
 mod utility;
 mod entities;
 mod scanner;
+mod parser;
 
 use std::collections::BTreeMap;
 use std::{io, thread};
 use std::fs::File;
 use std::io::{BufRead, Read, Write};
 use std::path::Path;
-use crate::entities::{FPoint, Token};
-use crate::utility::utility::{read_lines, cs_hash};
+use crate::entities::{FPoint, Precedence, Token};
+use crate::parser::parser::parser;
+use crate::utility::utility::{read_lines, s_hash};
 use crate::scanner::scanner::tokenizer;
+use my_macro::unique_i16;
 
 fn printer(points: &Vec<FPoint>, tokens: &BTreeMap<i16,Token>){
     let mut j = 1;
@@ -58,23 +61,42 @@ fn pause() {
 
 fn main() {
     loop {
-        let mut filename = String::new();
+        /*let mut filename = String::new();
         println!("Locate a .txt file for compiling:");
         io::stdin().read_line(&mut filename).expect("failed to readline");
         let path = Path::new(filename.as_str());
-        println!("{:?}",path);
+        println!("{:?}",path)*/;
 
         pause();
 
-        let mut token_tree: BTreeMap<i16, Token> = hashed_tree_map![";", ":","(" ,")" ,"{" ,"}" ,"[" ,"]" ,"," ,"+" ,"-" ,"*" ,"/" ,"=",
-                                                    "program", "data","division","|","integer","float","char","procedure","division",
-                                                    "set","to","unsigned","get","put","repeat","times","or","either","neither","nor",
-                                                    "both","and","execute","not","LT","LE","GT","GE","NE","EQ"];
+        let mut token_tree: BTreeMap<i16, Token> =
+            hashed_tree_map![
+                ";", ":","(" ,")" ,"{" ,"}" ,"[" ,"]" ,"," ,"+" ,"-" ,"*" ,"/" ,"=",
+                "program", "data","division","|","integer","float","char","procedure","division",
+                "set","to","unsigned","get","put","repeat","times","or","either","neither","nor",
+                "both","and","execute","not","LT","LE","GT","GE","NE","EQ"];
+
+        let precedence_tree: BTreeMap<i16,BTreeMap<i16,Precedence>> = precedence_tree_map![
+            "S" = { "E;":"P" } > {  } < { "E+", "E*", "E(", "(", "id" },
+            "E+" = { "E+":"E+" } > { "E;", "E)" } < { "E*", "E(", "(" , "id" },
+            "E*" = { "E*":"E*" } > { "E;", "E)" ,"E+" } < { "E(", "(" , "id" },
+            "E)" = {  } > { } < {  },
+            "E;" = {  } > {  } < {  },
+            "+" = {  } > {  } < {  },
+            "-" = {  } > {  } < {  },
+            "*" = {  } > {  } < {  },
+            "/" = {  } > {  } < {  },
+            "(" = { "E)":"id" } > {  } < { "id", "(" },
+            ")" = {  } > {  } < {  },
+            ";" = {  } > {  } < {  },
+            "id" = { ")":"E)", "+":"E+", "-":"E+", "*":"E*", "/":"E*", ";":"E;" } > {  } < {  },
+        ];
+
         let mut points: Vec<FPoint> = Vec::new();
 
         let mut scanner_threats: Vec<thread::JoinHandle<(Vec<FPoint>, Vec<(i16, Token)>, i8)>> = Vec::new();
 
-        match read_lines(Path::new(path)) {
+        match read_lines(Path::new("code.txt")) {
             Ok(lines) => {
                 let mut i = 1;
                 for line in lines {
@@ -97,13 +119,19 @@ fn main() {
                     points.append(&mut data.0);
 
                     for datum in data.1 {
-                        token_tree.insert(datum.0, datum.1);
+                        if !token_tree.contains_key(&datum.0) {
+                            token_tree.insert(datum.0, datum.1);
+                        }
                     }
                 }
 
                 if data.2 > 0 { in_comment = true; }
             }
+            println!("\n==============\n");
+            printer(&points, &token_tree);
+            println!("\n==============\n");
+            points = parser(points,&mut token_tree, &precedence_tree);
+            printer(&points, &token_tree);
         }
-        printer(&points, &token_tree);
     }
 }

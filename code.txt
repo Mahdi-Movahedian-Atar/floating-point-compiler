@@ -1,0 +1,22 @@
+program AdvancedProgram;
+data division;
+    id1: integer;
+    id2: float;
+    id3: char;
+    id4, id5, id6: char;
+end;
+procedure division;
+    set id1 to 5;
+    set id2 to 3.14;
+    set id3 to 'A' ;
+    get id4, id2;
+    put id1, id2, id3, id4, id5;
+    repeat {
+        set id1 to id1 + 1 * id1 + 1;
+        put id1;
+    } either id1 > 10 or id2 < 5;
+    execute {
+        set id6 to id4 * '2';
+        put id6;
+    } both id5 >= 0 and not id3 = 'B';
+end;

@@ -1,4 +1,6 @@
 pub mod utility {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
     use std::fs::File;
     use std::io;
     use std::io::BufRead;
@@ -10,39 +12,32 @@ pub mod utility {
         Ok(io::BufReader::new(file).lines())
     }
 
-    pub const fn cs_hash(string: &str) -> i16 {
-        let mut hash: i32 = 1;
-        let mut j: i32 = 0;
-        let length = string.as_bytes().len() as i32;
-
-        while j < length {
-            let i = j + string.as_bytes()[0] as i32;
-            hash *= i;
-            hash %= i16::MAX as i32;
-            j += 1;
-        }
-        return hash as i16;
-    }
-
     pub fn s_hash(string: &str) -> i16 {
-        let mut hash: i32 = 1;
-        let mut j: i32 = 0;
-        let length = string.as_bytes().len() as i32;
-        let max = i32::MAX / i16::MAX as i32;
+        let mut hasher = DefaultHasher::new();
 
-        while j < length {
-            let mut i = j + string.as_bytes()[0] as i32;
-            i = max % i;
-            hash *= i;
-            hash %= i16::MAX as i32;
-            j += 1;
-        }
-        return hash as i16;
+        string.hash(&mut hasher);
+
+        let hash_value = hasher.finish() as i16;
+
+        hash_value
     }
 
     #[macro_export] macro_rules! hashed_tree_map {
     [ $( $y:literal ),* ] => {
-        BTreeMap::from([$((cs_hash($y), entities::Token::Pred),)*])
+            BTreeMap::from([$((unique_i16!($y), entities::Token::Pred),)*])
+    }}
+    #[macro_export] macro_rules! precedence_tree_map {
+    { $( $x:literal = { $( $y:literal : $t:literal ),* } > { $( $z:literal ),* } < { $( $k:literal ),* }),* $(,)?  } => {
+        {
+            let mut outer_map = BTreeMap::new();
+            $(
+                let mut inner_map = BTreeMap::new();
+                $(inner_map.insert(unique_i16!($y), entities::Precedence::Needs(unique_i16!($t)));)*
+                $(inner_map.insert(unique_i16!($z), entities::Precedence::Greater);)*
+                $(inner_map.insert(unique_i16!($k), entities::Precedence::Lesser);)*
+                outer_map.insert(unique_i16!($x), inner_map);
+            )*
+            outer_map
+        }
     }
-}
-}
+}}

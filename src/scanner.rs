@@ -1,13 +1,15 @@
 pub mod scanner{
+    use my_macro::unique_i16;
+
     use crate::entities::{FPoint , MetaData, Token, PointState, VariableType};
-    use crate::utility::utility::{s_hash, cs_hash};
+    use crate::utility::utility::{s_hash};
 
     macro_rules! token_insert {
     ( $y:literal, $tokens: ident, $token: ident, $line_num: ident) => {
         {
             $tokens.0.push(FPoint{meta_data:MetaData
                 {line:$line_num.clone(),raw:$token},
-                    state:PointState::Token(cs_hash($y))});
+                    state:PointState::Token(unique_i16!($y))});
             $token = String::new();
         }
     };
@@ -162,8 +164,7 @@ pub mod scanner{
                             '=' |
                             '|' |
                             ' ' |
-                            '\'' |
-                            '0'..='9' => { i -= 1; break; },
+                            '\'' => { i -= 1; break; },
                             _ => { token.push(chars[i]);i += 1; }
                         }
                     }
