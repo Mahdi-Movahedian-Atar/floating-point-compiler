@@ -1,13 +1,15 @@
 pub mod utility {
     use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
     use std::fs::File;
+    use std::hash::{Hash, Hasher};
     use std::io;
     use std::io::BufRead;
     use std::path::Path;
 
     pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-        where P: AsRef<Path>, {
+    where
+        P: AsRef<Path>,
+    {
         let file = File::open(filename)?;
         Ok(io::BufReader::new(file).lines())
     }
@@ -22,11 +24,13 @@ pub mod utility {
         hash_value
     }
 
-    #[macro_export] macro_rules! hashed_tree_map {
+    #[macro_export]
+    macro_rules! hashed_tree_map {
     [ $( $y:literal ),* ] => {
             BTreeMap::from([$((unique_i16!($y), entities::Token::Pred),)*])
     }}
-    #[macro_export] macro_rules! precedence_tree_map {
+    #[macro_export]
+    macro_rules! precedence_tree_map {
     { $( $x:literal = { $( $y:literal : $t:literal ),* } > { $( $z:literal ),* } < { $( $k:literal ),* }),* $(,)?  } => {
         {
             let mut outer_map = BTreeMap::new();
@@ -40,4 +44,5 @@ pub mod utility {
             outer_map
         }
     }
-}}
+}
+}

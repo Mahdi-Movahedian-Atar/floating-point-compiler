@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
-use std::collections::hash_map::DefaultHasher;
 use quote::quote;
+use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use syn::{LitStr, parse_macro_input};
+use syn::{parse_macro_input, LitStr};
 
 fn s_hash(string: &str) -> i16 {
     let mut hasher = DefaultHasher::new();

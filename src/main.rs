@@ -1,50 +1,50 @@
-mod utility;
 mod entities;
-mod scanner;
 mod parser;
+mod scanner;
+mod utility;
 
+use crate::entities::{FPoint, Precedence, Token};
+use crate::parser::parser::parser;
+use crate::scanner::scanner::tokenizer;
+use crate::utility::utility::{read_lines};
+use my_macro::unique_i16;
 use std::collections::BTreeMap;
-use std::{io, thread};
 use std::fs::File;
 use std::io::{BufRead, Read, Write};
 use std::path::Path;
-use crate::entities::{FPoint, Precedence, Token};
-use crate::parser::parser::parser;
-use crate::utility::utility::{read_lines, s_hash};
-use crate::scanner::scanner::tokenizer;
-use my_macro::unique_i16;
+use std::{io, thread};
 
-fn printer(points: &Vec<FPoint>, tokens: &BTreeMap<i16,Token>){
+fn printer(points: &Vec<FPoint>, tokens: &BTreeMap<i16, Token>, name: &str) {
     let mut j = 1;
-    let path = Path::new("compiled.txt");
+    let binding = (name.to_string() + ".txt");
+    let path = Path::new(&binding);
 
     let mut file = match File::create(&path) {
         Err(why) => {
-            println!("Could not print the compiled code :\n {:?}",why);
+            println!("Could not print the compiled code :\n {:?}", why);
             return;
-        },
+        }
         Ok(file) => file,
     };
 
-
-    println!();
-    print!("{:}: ",j);
-    writeln!(& mut file,"{:}: ",j).unwrap();
+    println!("\n\n=============={:?}==============\n\n", name);
+    print!("{:}: ", j);
+    writeln!(&mut file, "{:}: ", j).unwrap();
     for point in points {
-        if point.meta_data.line > j  {
-            j+=1;
+        if point.meta_data.line > j {
+            j += 1;
             println!();
-            print!("{:}: ",j);
-            writeln!(& mut file).unwrap();
-            write!(& mut file,"{:}: ",j).unwrap();
+            print!("{:}: ", j);
+            writeln!(&mut file).unwrap();
+            write!(&mut file, "{:}: ", j).unwrap();
         }
-        print!("{:?}->{:?}, ",point.meta_data.raw,point.state);
-        write!(& mut file,"{:?}->{:?}, ",point.meta_data.raw,point.state).unwrap();
+        print!("{:?}->{:?}, ", point.meta_data.raw, point.state);
+        write!(&mut file, "{:?}->{:?}, ", point.meta_data.raw, point.state).unwrap();
     }
     println!();
-    print!("{:?}",tokens);
-    writeln!(& mut file).unwrap();
-    write!(& mut file,"{:?}",tokens).unwrap();
+    print!("{:?}", tokens);
+    writeln!(&mut file).unwrap();
+    write!(&mut file, "{:?}", tokens).unwrap();
 }
 
 fn pause() {
@@ -60,26 +60,59 @@ fn pause() {
 }
 
 fn main() {
-    loop {
-        /*let mut filename = String::new();
-        println!("Locate a .txt file for compiling:");
-        io::stdin().read_line(&mut filename).expect("failed to readline");
-        let path = Path::new(filename.as_str());
-        println!("{:?}",path)*/;
+    let mut token_tree: BTreeMap<i16, Token> = hashed_tree_map![
+            ";",
+            ":",
+            "(",
+            ")",
+            "{",
+            "}",
+            "[",
+            "]",
+            ",",
+            "+",
+            "-",
+            "*",
+            "/",
+            "=",
+            "program",
+            "data",
+            "division",
+            "|",
+            "integer",
+            "float",
+            "char",
+            "procedure",
+            "division",
+            "set",
+            "to",
+            "unsigned",
+            "get",
+            "put",
+            "repeat",
+            "times",
+            "or",
+            "Or",
+            "either",
+            "neither",
+            "nor",
+            "both",
+            "and",
+            "And",
+            "execute",
+            "not",
+            "LT",
+            "LE",
+            "GT",
+            "GE",
+            "NE",
+            "EQ"
+        ];
 
-        pause();
-
-        let mut token_tree: BTreeMap<i16, Token> =
-            hashed_tree_map![
-                ";", ":","(" ,")" ,"{" ,"}" ,"[" ,"]" ,"," ,"+" ,"-" ,"*" ,"/" ,"=",
-                "program", "data","division","|","integer","float","char","procedure","division",
-                "set","to","unsigned","get","put","repeat","times","or","either","neither","nor",
-                "both","and","execute","not","LT","LE","GT","GE","NE","EQ"];
-
-        let precedence_tree: BTreeMap<i16,BTreeMap<i16,Precedence>> = precedence_tree_map![
-            "S" = { "E;":"P" } > {  } < { "E+", "E*", "E(", "(", "id" },
-            "E+" = { "E+":"E+" } > { "E;", "E)" } < { "E*", "E(", "(" , "id" },
-            "E*" = { "E*":"E*" } > { "E;", "E)" ,"E+" } < { "E(", "(" , "id" },
+    let precedence_tree: BTreeMap<i16, BTreeMap<i16, Precedence>> = precedence_tree_map![
+            "S" = { "E;":"P" } > {  } < { "E+", "E*", "(", "id" },
+            "E+" = { "E+":"E+" } > { "E;", "E)" } < { "E*", "(" , "id" },
+            "E*" = { "E*":"E*" } > { "E;", "E)" ,"E+" } < { "(" , "id" },
             "E)" = {  } > { } < {  },
             "E;" = {  } > {  } < {  },
             "+" = {  } > {  } < {  },
@@ -91,29 +124,39 @@ fn main() {
             ";" = {  } > {  } < {  },
             "id" = { ")":"E)", "+":"E+", "-":"E+", "*":"E*", "/":"E*", ";":"E;" } > {  } < {  },
         ];
+    loop {
+        pause();
 
         let mut points: Vec<FPoint> = Vec::new();
 
-        let mut scanner_threats: Vec<thread::JoinHandle<(Vec<FPoint>, Vec<(i16, Token)>, i8)>> = Vec::new();
+        let mut scanner_threats: Vec<thread::JoinHandle<(Vec<FPoint>, Vec<(i16, Token)>, i8)>> =
+            Vec::new();
 
         match read_lines(Path::new("code.txt")) {
             Ok(lines) => {
                 let mut i = 1;
                 for line in lines {
                     if let Ok(ip) = line {
-                        scanner_threats.push(thread::spawn(move || { return tokenizer(ip, i.clone()); }));
+                        scanner_threats.push(thread::spawn(move || {
+                            return tokenizer(ip, i.clone());
+                        }));
                     }
                     i += 1;
                 }
             }
-            Err(err) => { println!("{:?}",err); continue; }
+            Err(err) => {
+                println!("{:?}", err);
+                continue;
+            }
         }
         {
             let mut in_comment = false;
 
             for threat in scanner_threats {
                 let mut data = threat.join().unwrap();
-                if data.2 < 0 { in_comment = false; }
+                if data.2 < 0 {
+                    in_comment = false;
+                }
 
                 if in_comment == false {
                     points.append(&mut data.0);
@@ -125,13 +168,15 @@ fn main() {
                     }
                 }
 
-                if data.2 > 0 { in_comment = true; }
+                if data.2 > 0 {
+                    in_comment = true;
+                }
             }
-            println!("\n==============\n");
-            printer(&points, &token_tree);
-            println!("\n==============\n");
-            points = parser(points,&mut token_tree, &precedence_tree);
-            printer(&points, &token_tree);
+            printer(&points, &token_tree, "tokenizer");
+            let return_val = parser(points, &mut token_tree, &precedence_tree);
+            points = return_val.0;
+            printer(&points, &token_tree,"parser");
+            if return_val.1 { println!("\ngeneral parser error: unclosed scope(s)"); }
         }
     }
 }
