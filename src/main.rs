@@ -43,6 +43,8 @@ fn printer(points: &Vec<FPoint>, tokens: &BTreeMap<i16, Token>, name: &str) {
     }
     println!();
     print!("{:?}", tokens);
+    println!("\n\n");
+    writeln!(&mut file, "\n\n").unwrap();
     writeln!(&mut file).unwrap();
     write!(&mut file, "{:?}", tokens).unwrap();
 }
@@ -60,7 +62,24 @@ fn pause() {
 }
 
 fn main() {
-    let mut token_tree: BTreeMap<i16, Token> = hashed_tree_map![
+    let precedence_tree: BTreeMap<i16, BTreeMap<i16, Precedence>> = precedence_tree_map![
+            "S" = { "E;":"P" } > {  } < { "E+", "E*", "(", "id" },
+            "E+" = { "E+":"E+" } > { "E;", "E)" } < { "E*", "(" , "id" },
+            "E*" = { "E*":"E*" } > { "E;", "E)" ,"E+" } < { "(" , "id" },
+            "E)" = {  } > { } < {  },
+            "E;" = {  } > {  } < {  },
+            "+" = {  } > {  } < {  },
+            "-" = {  } > {  } < {  },
+            "*" = {  } > {  } < {  },
+            "/" = {  } > {  } < {  },
+            "(" = { "E)":"id" } > {  } < { "id", "(" },
+            ")" = {  } > {  } < {  },
+            ";" = {  } > {  } < {  },
+            "id" = { ")":"E)", "+":"E+", "-":"E+", "*":"E*", "/":"E*", ";":"E;" } > {  } < {  },
+        ];
+    pause();
+    loop {
+        let mut token_tree: BTreeMap<i16, Token> = hashed_tree_map![
             ";",
             ":",
             "(",
@@ -108,24 +127,6 @@ fn main() {
             "NE",
             "EQ"
         ];
-
-    let precedence_tree: BTreeMap<i16, BTreeMap<i16, Precedence>> = precedence_tree_map![
-            "S" = { "E;":"P" } > {  } < { "E+", "E*", "(", "id" },
-            "E+" = { "E+":"E+" } > { "E;", "E)" } < { "E*", "(" , "id" },
-            "E*" = { "E*":"E*" } > { "E;", "E)" ,"E+" } < { "(" , "id" },
-            "E)" = {  } > { } < {  },
-            "E;" = {  } > {  } < {  },
-            "+" = {  } > {  } < {  },
-            "-" = {  } > {  } < {  },
-            "*" = {  } > {  } < {  },
-            "/" = {  } > {  } < {  },
-            "(" = { "E)":"id" } > {  } < { "id", "(" },
-            ")" = {  } > {  } < {  },
-            ";" = {  } > {  } < {  },
-            "id" = { ")":"E)", "+":"E+", "-":"E+", "*":"E*", "/":"E*", ";":"E;" } > {  } < {  },
-        ];
-    pause();
-    loop {
         pause();
 
         let mut points: Vec<FPoint> = Vec::new();
@@ -177,7 +178,7 @@ fn main() {
             let return_val = parser(points, &mut token_tree, &precedence_tree);
             points = return_val.0;
             printer(&points, &token_tree,"parser");
-            if return_val.1 { println!("\ngeneral parser error: unclosed scope(s)"); }
+            if return_val.1 { println!("\n\ngeneral parser error: unclosed scope(s)\n\n"); }
         }
     }
 }

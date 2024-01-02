@@ -21,4 +21,7 @@
 20: "put"->Token(-24165), "id6"->Token(22380), ";"->Token(19761), 
 21: "}"->Token(20699), "both"->Token(-29502), "id1"->Token(-24806), "LT"->Token(9360), "0"->Token(21733), "And"->Token(3837), "id1"->Token(-24806), "LT"->Token(9360), "0"->Token(21733), "and"->Token(-32592), "id2"->Token(2257), "LT"->Token(9360), "0.0"->Token(-30825), ";"->Token(19761), 
 22: "end"->Token(-28800), ";"->Token(19761), 
+
+
+
 {-32592: Pred, -31763: Pred, -30825: Lit(Float(0.0)), -29722: Pred, -29502: Pred, -28800: Und, -28046: Pred, -27684: Pred, -27124: Pred, -24970: Pred, -24806: Und, -24165: Pred, -22383: Pred, -19106: Pred, -15809: Pred, -15051: Pred, -13182: Lit(Integer(-5)), -12025: Pred, -11642: Pred, -11369: Lit(Integer(1)), -9758: Pred, -8996: Pred, -6962: Pred, -6731: Pred, -3709: Pred, -2386: Pred, -2191: Pred, -1938: Pred, 177: Pred, 868: Und, 1007: Pred, 1575: Pred, 2136: Pred, 2257: Und, 2436: Pred, 3837: Pred, 4086: Pred, 4942: Pred, 5337: Lit(Character('A')), 5716: Pred, 6151: Lit(Float(-3.14)), 8321: Pred, 9360: Pred, 13577: Pred, 15141: Pred, 15561: Pred, 15795: Pred, 16170: Pred, 16936: Pred, 19068: Und, 19761: Pred, 19838: Lit(Integer(4)), 20699: Pred, 21186: Pred, 21733: Lit(Integer(0)), 22181: Pred, 22380: Und, 23162: Pred, 25739: Und, 28400: Und, 30960: Lit(Character('2'))}
